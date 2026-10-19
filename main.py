@@ -23,6 +23,23 @@ st.markdown(
 )
 
 
+SCLocations = {
+    "Northampton Survival Center": {
+        "lat": 42.3323,
+        "lng": -72.6412,
+        "address": "265 Prospect St, Northampton, MA 01060",
+        "phone": "(413) 584-2662",
+        "website": "https://www.northamptonsurvival.org/"
+    },
+    "Amherst Survival Center": {
+        "lat": 42.3732,
+        "lng": -72.5199,
+        "address": "138 Sunderland Rd, Amherst, MA 01002",
+        "phone": "(413) 256-4006",
+        "website": "https://www.amherstsurvival.org/"
+    },
+}
+
 NCLAT,NCLNG = 42.3323, -72.6412
 
 mapfocus = [NCLAT, NCLNG]
@@ -33,18 +50,19 @@ st.markdown("<h1 style='text-align: center;'>Survival Center Map</h1>", unsafe_a
 
 m = folium.Map(location=mapfocus, zoom_start=current_zoom, width="100%", height="100%")
 
-folium.Marker(
-    location=[NCLAT, NCLNG],
-    popup= "Northampton Survival Center",
-    tooltip = "Northampton Survival Center",
-    icon=folium.Icon(color="blue", icon="info-sign")
-).add_to(m)
+for centername, centerinfo in SCLocations.items():
+    folium.Marker(
+        location= [centerinfo["lat"], centerinfo["lng"]],
+        popup= centername,
+        tooltip = centername,
+        icon=folium.Icon(color="blue", icon="info-sign")
+    ).add_to(m)
 
 
 
-st_folium(
+mapstuff= st_folium(
     m, 
-    height=850, 
+    height=850,  
     use_container_width=True
 )
 
