@@ -1,16 +1,17 @@
 import folium
 import streamlit as st
 from streamlit_folium import st_folium
-from folium import Popup 
+from folium import Popup
+from locations import get_locations, get_buslocations
 
-if "sidebar_expanded" not in st.session_state:
-    st.session_state.sidebar_expanded = False
+
+if "selected_location" not in st.session_state:
+    st.session_state.selected_location = None
 
 st.set_page_config(
     page_title="Survival Center Map",
-    page_icon=":map:",
     layout="wide",
-    initial_sidebar_state="expanded" if st.session_state.sidebar_expanded else "collapsed"
+    initial_sidebar_state="expanded"
 )
 
 st.markdown(
@@ -31,40 +32,23 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-SCLocations = {
-    "Northampton Survival Center": {
-        "lat": 42.3323,
-        "lng": -72.6412,
-        "address": "265 Prospect St, Northampton, MA 01060",
-        "phone": "(413) 584-2662",
-        "website": "https://www.northamptonsurvival.org/",
-        "image": "https://www.northamptonsurvival.org/images/logo.png"
-    },
-    "Amherst Survival Center": {
-        "lat": 42.3732,
-        "lng": -72.5199,
-        "address": "138 Sunderland Rd, Amherst, MA 01002",
-        "phone": "(413) 256-4006",
-        "website": "https://www.amherstsurvival.org/",
-        "image": "https://www.amherstsurvival.org/images/logo.png"
-    },
-}
-
 NCLAT, NCLNG = 42.3323, -72.6412
 mapfocus = [NCLAT, NCLNG]
 current_zoom = 12
 
 st.markdown("<h1 style='text-align: center;'>Survival Center Map</h1>", unsafe_allow_html=True)
 
+all_locations = {**get_locations(), **get_buslocations()}
+
 m = folium.Map(location=mapfocus, zoom_start=current_zoom, width="100%", height="100%")
 
-for centername, centerinfo in SCLocations.items():
+for centername, centerinfo in all_locations.items():
+    icon_color = "blue" if centername in get_locations() else "green"
     folium.Marker(
         location=[centerinfo["lat"], centerinfo["lng"]],
-        # FIX: Using folium.Popup forces a clean string transfer to streamlit-folium
         popup=Popup(centername, parse_html=True), 
         tooltip=centername,
-        icon=folium.Icon(color="blue", icon="info-sign")
+        icon=folium.Icon(color=icon_color, icon="info-sign")
     ).add_to(m)
 
 map_data = st_folium(
@@ -73,26 +57,31 @@ map_data = st_folium(
     use_container_width=True
 )
 
+
 if map_data:
-    
     clicked_target = map_data.get("last_object_clicked_popup")
+    if clicked_target and clicked_target in all_locations:
+        if st.session_state.selected_location != clicked_target:
+            st.session_state.selected_location = clicked_target
+            st.rerun()
 
-    
-    if clicked_target and not st.session_state.sidebar_expanded:
-        st.session_state.sidebar_expanded = True
-        st.rerun()
-
-
-    if st.session_state.sidebar_expanded:
-        with st.sidebar.expander("Survival Center Information", expanded=True):
-            if clicked_target and clicked_target in SCLocations:
-                info = SCLocations[clicked_target]
-                st.write(f"### {clicked_target}")
+with st.sidebar:
+    with st.expander("Survival Center Information", expanded=True):
+        selected_loc = st.session_state.get("selected_location")
+        if selected_loc and selected_loc in all_locations:
+            info = all_locations[selected_loc]
+            st.write(f"### {selected_loc}")
+            
+            if 'address' in info and info['address']:
                 st.write(f"**Address:** {info['address']}")
+            if 'phone' in info and info['phone']:
                 st.write(f"**Phone:** {info['phone']}")
+            if 'website' in info and info['website']:
                 st.write(f"**Website:** [{info['website']}]({info['website']})")
+            if 'schedule' in info and info['schedule']:
+                st.write(f"**Schedule:** {info['schedule']}")
+            if 'image' in info and info['image']:
                 st.image(info['image'], width=200)
-            else:
-                st.write("Click a map marker to view structural layout profile details.")
-        
-        
+        else:
+            st.info("Click on a marker on the map to view details here.")
+
