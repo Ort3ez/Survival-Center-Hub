@@ -4,10 +4,10 @@ from streamlit_folium import st_folium
 from folium import Popup
 from locations import get_locations, get_buslocations
 
-
+##################
 if "selected_location" not in st.session_state:
     st.session_state.selected_location = None
-
+#######################
 st.set_page_config(
     page_title="Survival Center Map",
     layout="wide",
@@ -24,9 +24,9 @@ st.markdown(
         padding-right: 0rem;
         max-width: 100%;
     }
-    #MainMenu {visibility: hidden;}
-    footer {visibility: hidden;}
-    header {visibility: hidden;}
+    #MainMenu
+    footer 
+    header 
     </style>
     """,
     unsafe_allow_html=True
@@ -57,14 +57,14 @@ map_data = st_folium(
     use_container_width=True
 )
 
-
+##########################
 if map_data:
     clicked_target = map_data.get("last_object_clicked_popup")
     if clicked_target and clicked_target in all_locations:
         if st.session_state.selected_location != clicked_target:
             st.session_state.selected_location = clicked_target
             st.rerun()
-
+#########################################
 with st.sidebar:
     with st.expander("Survival Center Information", expanded=True):
         selected_loc = st.session_state.get("selected_location")
